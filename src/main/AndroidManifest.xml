@@ -19,6 +19,8 @@
         </activity>
         <activity android:name=".ChooseAreaActivity" />
         <activity android:name=".BaseActivity"></activity>
+        <receiver android:name="com.example.receiver.AutoRefreshReceiver"/>
+        <service android:name="com.example.service.AutoRefreshService"/>
     </application>
 
 </manifest>

@@ -25,7 +25,7 @@ public class PreferenceUtils {
     private static void saveWeatherToPref(Context context, WeatherInfo weatherInfo) {
         //注：每个应用都有一个默认的配置文件preferences.xml，使用getDefaultSharedPreferences获取。
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
-        SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd", Locale.CHINA);
+        SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd HHmmss", Locale.CHINA);
         Log.d("PreferenceUtils", date.format(new Date()));
         editor.putBoolean("isSaved",true);
         editor.putString("city", weatherInfo.getWeatherinfo().getCity());
@@ -33,7 +33,7 @@ public class PreferenceUtils {
         editor.putString("temp1", weatherInfo.getWeatherinfo().getTemp1());
         editor.putString("temp2", weatherInfo.getWeatherinfo().getTemp2());
         editor.putString("weather", weatherInfo.getWeatherinfo().getWeather());
-        editor.putString("ptime", date.format(new Date())+"  " + weatherInfo.getWeatherinfo().getPtime());
+        editor.putString("ptime", date.format(new Date()));
         editor.putBoolean(weatherInfo.getWeatherinfo().getCityid(), true);       //储存过的标志位
         editor.apply();         //apply在后台提交, 而commit 马上提交 建议在后台提交.
     }
