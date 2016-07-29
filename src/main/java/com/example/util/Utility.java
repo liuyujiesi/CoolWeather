@@ -1,12 +1,18 @@
 package com.example.util;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.example.db.CoolWeatherDB;
 import com.example.model.City;
 import com.example.model.County;
 import com.example.model.Province;
+import com.example.model.WeatherInfo;
+
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 /**
  * Created by Administrator on 2016/7/27.
@@ -18,7 +24,7 @@ public class Utility {
             response = response.replace("{", "");
             response = response.replace("}", "");
             String[] divided = response.split(",");
-            if (divided != null & divided.length > 0) {
+            if (divided.length > 0) {
                 for (int i = 0; i < divided.length; i++) {
                     Province province = new Province();
                     divided[i] = divided[i].replace("\"", "");
@@ -37,7 +43,7 @@ public class Utility {
             response = response.replace("{", "");
             response = response.replace("}", "");
             String[] divided = response.split(",");
-            if (divided != null & divided.length > 0) {
+            if (divided.length > 0) {
                 for (int i = 0; i < divided.length; i++) {
                     City city = new City() ;
                     divided[i] = divided[i].replace("\"", "");
@@ -58,7 +64,7 @@ public class Utility {
             response = response.replace("{", "");
             response = response.replace("}", "");
             String[] divided = response.split(",");
-            if (divided != null & divided.length > 0) {
+            if (divided.length > 0) {
                 for (int i = 0; i < divided.length; i++) {
                     County county = new County();
                     divided[i] = divided[i].replace("\"", "");

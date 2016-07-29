@@ -1,10 +1,11 @@
 package com.example.activity;
 
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
@@ -12,6 +13,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.controller.ActivityController;
 import com.example.db.CoolWeatherDB;
 import com.example.model.City;
 import com.example.model.County;
@@ -19,22 +21,16 @@ import com.example.model.Province;
 import com.example.model.WeatherInfo;
 import com.example.util.HttpCallbackListener;
 import com.example.util.HttpUtils;
+import com.example.util.PreferenceUtils;
 import com.example.util.Utility;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.OnItemClick;
 
-
-public class ChooseAreaActivity extends AppCompatActivity {
+public class ChooseAreaActivity extends BaseActivity {
     public static final int LEVEL_PROVINCE = 0;
     public static final int LEVEL_CITY = 1;
     public static final int LEVEL_COUNTY = 2;
@@ -60,7 +56,7 @@ public class ChooseAreaActivity extends AppCompatActivity {
     //当前选中的级别
     private int currentLevel;
     private StringBuilder cityCodeOfCounty = new StringBuilder();
-    private WeatherInfo weatherInfo;
+    private WeatherInfo.WeatherinfoBean weatherinfoBean;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,8 +110,10 @@ public class ChooseAreaActivity extends AppCompatActivity {
         }
     }
 
-    private void queryCounties(String cityCode) {           //10105  01
-        countyList = coolWeatherDB.loadCounty(cityCode);            //@@@@@@@@@不正常 为空的  size是0;
+    private void queryCounties(String cityCode) {
+        //10105  01
+        countyList = coolWeatherDB.loadCounty(cityCode);
+        //@@@@@@@@@不正常 为空的  size是0;
         //log.d("ChooseAreaActivity", "countyList:" + countyList + " cityCode: " + cityCode + "selectedCity.getCityCode(): " + selectedCity.getCityCode());
         if (countyList.size() > 0) {
             //在数据库中查询
@@ -174,6 +172,7 @@ public class ChooseAreaActivity extends AppCompatActivity {
                     });
                 }
             }
+
             @Override
             public void onError(Exception e) {
                 e.printStackTrace();
@@ -191,64 +190,72 @@ public class ChooseAreaActivity extends AppCompatActivity {
 
     //查询天气信息
     private void queryWeatherInfo(String code) {
-        String address = "http://www.weather.com.cn/data/cityinfo/"+code+".html";
+        String address = "http://www.weather.com.cn/data/cityinfo/" + code + ".html";
         showProgressDialog();
-        //HttpURLConnection 有BUG 报EOF异常,我们使用HttpClient来请求网络
-        HttpUtils.sendHttpRequestByGetWithHttpClient(address, new HttpCallbackListener() {
+        weatherinfoBean = PreferenceUtils.getWeatherFromPref(ChooseAreaActivity.this);
+        //如果本地有, 那么直接本地取.
+        if (weatherinfoBean != null) {
+            WeatherDetailAcitivity.startAction(ChooseAreaActivity.this, weatherinfoBean);
+        } else {
+            //本地没有,网络请求获取,
+            //HttpURLConnection 有BUG 报EOF异常,我们使用HttpClient来请求网络
+            HttpUtils.sendHttpRequestByGetWithHttpClient(address, new HttpCallbackListener() {
 
-            @Override
-            public void onFinish(String response) {
-                if (response != null) {
-                    closeProgressDialog();
-                    weatherInfo = WeatherInfo.objectFromData(response);
-                    //log.d("ChooseAreaActivity", "weatherInfo是:: " + weatherInfo.getWeatherinfo().toString());
-                    WeatherDetailAcitivity.startAction(ChooseAreaActivity.this,weatherInfo.getWeatherinfo());
-                }
-            }
-
-            @Override
-            public void onError(Exception e) {
-                e.printStackTrace();
-                //回到主线程处理逻辑
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
+                @Override
+                public void onFinish(String response) {
+                    if (response != null) {
                         closeProgressDialog();
-                        Toast.makeText(ChooseAreaActivity.this, "加载失败", Toast.LENGTH_SHORT).show();
+                        //weatherInfo = WeatherInfo.objectFromData(response);
+                        //存到本地sharedPreference
+                        PreferenceUtils.handleWeatherResponse(ChooseAreaActivity.this, response);
+                        //log.d("ChooseAreaActivity", "weatherInfo是:: " + weatherInfo.getWeatherinfo().toString());
+                        WeatherDetailAcitivity.startAction(ChooseAreaActivity.this, weatherinfoBean);
                     }
-                });
-            }
-        });
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    e.printStackTrace();
+                    //回到主线程处理逻辑
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            closeProgressDialog();
+                            Toast.makeText(ChooseAreaActivity.this, "加载失败", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            });
+        }
     }
 
 
-
-    private void showProgressDialog() {
+    public static void showProgressDialog() {
     }
 
-    private void closeProgressDialog() {
+    public static void closeProgressDialog() {
     }
 
     @OnItemClick(R.id.lv_area)
     void onItemClick(int position) {
         if (currentLevel == LEVEL_PROVINCE) {
-            selectedProvince = privinceList.get(position);      //privinceList正常 selectedProvince正常 provinceCode正常
+            selectedProvince = privinceList.get(position);
+            //privinceList正常 selectedProvince正常 provinceCode正常
             String provinceCode = selectedProvince.getProvinceCode();
             //查询市级数据
             queryCities(provinceCode);
         } else if (currentLevel == LEVEL_CITY) {
             selectedCity = cityList.get(position);
-            cityCodeOfCounty.append(selectedProvince.getProvinceCode()).append(selectedCity.getCityCode());            //得到完整的CountyCode 了
+            cityCodeOfCounty.append(selectedProvince.getProvinceCode()).append(selectedCity.getCityCode());
+            //得到完整的CountyCode 了
             //查询县级数据
             queryCounties(cityCodeOfCounty.toString());
             //log.d("ChooseAreaActivity", selectedCity.getCityName() + cityCodeOfCounty);
-            cityCodeOfCounty.delete(0, cityCodeOfCounty.length());                                              //清空
+            cityCodeOfCounty.delete(0, cityCodeOfCounty.length());
+            //清空
         } else if (currentLevel == LEVEL_COUNTY) {
             County selectedCounty = countyList.get(position);
             queryWeatherInfo("101010100");
-            //天气?
-            Toast.makeText(this, "测试测试: " + selectedCounty.toString(), Toast.LENGTH_SHORT).show();
-            //WeatherDetailAcitivity.startAction(ChooseAreaActivity.this,weatherInfo);
         }
     }
 
@@ -259,8 +266,20 @@ public class ChooseAreaActivity extends AppCompatActivity {
         } else if (currentLevel == LEVEL_CITY) {
             queryProvinces();
         } else {
-            finish();
+            //finish();
+            //保险起见 销毁全部活动
+            ActivityController.finishAll();
         }
+    }
+    public static void startAction(Context context) {
+        Intent intent = new Intent(context, ChooseAreaActivity.class);
+        context.startActivity(intent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        finish();
     }
 
     @butterknife.OnClick({R.id.btn_search, R.id.btn_menu})

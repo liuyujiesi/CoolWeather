@@ -98,7 +98,7 @@ public class HttpUtils {
     }
 
 
-    public static void sendHttpRequestByGetWithHttpClient(final String address,  final HttpCallbackListener listener) {
+    public static void sendHttpRequestByGetWithHttpClient(final String address, final HttpCallbackListener listener) {
         new Thread(new Runnable() {
 
             @Override
