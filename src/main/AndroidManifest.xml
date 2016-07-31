@@ -20,7 +20,7 @@
         <activity android:name=".ChooseAreaActivity" />
         <activity android:name=".BaseActivity"></activity>
         <receiver android:name="com.example.receiver.AutoRefreshReceiver"/>
-        <service android:name="com.example.service.AutoRefreshService"/>
+       <service android:name=".WeatherDetailAcitivity.AutoRefreshService"/>
     </application>
 
 </manifest>

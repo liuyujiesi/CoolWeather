@@ -42,8 +42,8 @@ public class AutoRefreshService extends Service {
             }
         }).start();
         AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        long triggerAtTime = SystemClock.elapsedRealtime() +  60 * 1000; //八个小时
-        //        long triggerAtTime = SystemClock.elapsedRealtime() + 8 * 60 * 60 * 1000; //八个小时
+        long triggerAtTime = SystemClock.elapsedRealtime() + 8 * 60 * 60 * 1000;        //八个小时
+        // long triggerAtTime = SystemClock.elapsedRealtime() + 8 * 60 * 60 * 1000; //八个小时
         Intent broadcastIntent = new Intent(this, AutoRefreshReceiver.class);
         //跳转到广播
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 1, broadcastIntent, PendingIntent.FLAG_UPDATE_CURRENT);
